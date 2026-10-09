@@ -1,0 +1,34 @@
+# 2026-10-09 — Week 0, Day 2: SQL diagnostic
+
+## Done
+- Logged Day 1 notes
+- SQL diagnostic: 3 interview-style problems, timed, no lookups
+
+## Diagnostic results
+| Problem | Time | Result |
+|---|---|---|
+| P1 Top 3 merchants per month | 10 min | Wrong: ranked single transactions, no GROUP BY/month |
+| P2 Spend drop >20% | 5 min | Plan correct in shape; wrong denominator + sign; no code |
+| P3 3+ consecutive days | 10 min | Loop-style thinking; didn't know the SQL pattern |
+
+## Learned
+- 4-grain checklist:
+What does one row of my output represent?
+What does one row of my input represent?
+Are they different? If yes, you need a step that changes the grain, usually GROUP BY.
+Does the question compare rows with each other (rank, previous month, consecutive days)? If yes, use a window function, after the grain is right.
+- Window functions compare rows without squashing them: DENSE_RANK, LAG, ROW_NUMBER.
+- % change = (new − old) / old. A drop is negative.
+- Gaps and islands: date − row number is constant for consecutive days.
+  Deduplicate dates first.
+
+## Mistakes to remember
+- Used LIMIT 3 for "top 3 per month". LIMIT cuts the whole result, not each group.
+- Divided by the current month instead of the previous month.
+
+## Insight
+- My problem decomposition is ahead of my SQL. The gaps are specific tools
+  (aggregation by period, window functions), not thinking.
+
+## Tomorrow
+- Re-solve P1–P3 from a blank editor, without looking
