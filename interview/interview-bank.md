@@ -3,6 +3,28 @@
 > **How to use:** read the answer, cover it, say it out loud in your own words. Mark ✅ (can say it) or 🔶 (shaky). Added date in brackets.
 
 ## SQL: window functions
+### How would you compute a 7-day moving average? [2026-10-20]
+*A:* First aggregate to one row per day, then
+AVG(daily_total) OVER (ORDER BY day ROWS BETWEEN 6 PRECEDING AND CURRENT ROW).
+ROWS counts rows, not days, so a missing day stretches the window. Fix that with a calendar join or a date-based RANGE frame. The first 6 rows get partial windows (not NULL), so filter them out if only full windows are wanted. AVG divides by the rows it actually saw.
+*Status:* ✅
+
+### When do you need a tie-breaker in OVER(ORDER BY ...)? [2026-10-20]
+*A:* Only when the ORDER BY key can repeat within the partition. After GROUP BY day, the day is unique, so the order is already deterministic. Adding a non-grouped column as a tie-breaker is worse: MySQL silently picks an arbitrary value (ONLY_FULL_GROUP_BY off), while Postgres/BigQuery raise an error.
+*Status:* ✅
+
+## SQL: general
+
+### Does ORDER BY in a CTE or subquery guarantee the output order? [2026-10-20]
+*A:* No. A CTE is an unordered set, and the engine may drop its ORDER BY. ORDER BY inside OVER() only orders the calculation. Only the outermost ORDER BY guarantees order. That matters even more with LIMIT/OFFSET, because they decide which rows survive. In BigQuery, results without a final ORDER BY can come back in a different order on each run.
+*Status:* ✅
+
+## Payments / fraud
+
+### Year-over-year spend growth per card product? [2026-10-20]
+*A:* GROUP BY year and product → LAG(spend) OVER (PARTITION BY product ORDER BY year) → ROUND((curr − prev) / prev * 100, 2). Round after ×100. Watch for gap years: LAG compares to the previous row, so a product with no 2021 sales compares 2022 to 2020. Fix it with a year calendar or a check that prev_year = year − 1.
+*Status:* 🔶 (gap-year fix not yet practised)
+
 
 ### Top-N per group with ties: ROW_NUMBER vs RANK vs DENSE_RANK? [Oct 13]
 **Example:** M1 and M2 tie at 500 for 1st, then M3 400, M4 300, M5 200. How many rows does each return for "<= 3"? Which do you use for "exactly 3 per month"?
