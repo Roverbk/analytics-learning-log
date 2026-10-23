@@ -3,6 +3,30 @@
 > **How to use:** read the answer, cover it, say it out loud in your own words. Mark ✅ (can say it) or 🔶 (shaky). Added date in brackets.
 
 ## SQL: window functions
+
+### When do you use SUM() OVER vs SUM() with GROUP BY? [2026-10-22]
+**A:** Look at the output grain. One row per group -> GROUP BY (summarize the
+group). Keep every row and show the group total beside it -> SUM() OVER
+(PARTITION BY ...). Window + DISTINCT can give the same result, but only when the
+window has no ORDER BY (same value on every row); it reads as patching the output.
+**Status:** ✅
+
+### Why does a filter change a window function's result? [2026-10-22]
+**A:** WHERE runs before window functions, and a filtered CTE hides rows from later
+steps. If every condition depends on the whole table (e.g. "location unique AND
+value shared with any other row"), compute all group sizes on the full table
+first, then filter once with AND. Filtering on one condition first makes the
+second count see only the survivors (#585).
+**Status:** 🔶
+
+## SQL: general
+
+### DISTINCT vs "unique" [2026-10-22]
+**A:** DISTINCT keeps one copy of each duplicate. "Unique" means the value
+appears exactly once, so all copies of a duplicate are dropped. Use
+COUNT(*) OVER (PARTITION BY col) = 1, or GROUP BY col HAVING COUNT(*) = 1.
+**Status:** ✅
+
 ### How would you compute a 7-day moving average? [2026-10-20]
 *A:* First aggregate to one row per day, then
 AVG(daily_total) OVER (ORDER BY day ROWS BETWEEN 6 PRECEDING AND CURRENT ROW).
