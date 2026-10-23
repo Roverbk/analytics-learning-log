@@ -4,6 +4,36 @@
 
 ## SQL: window functions
 
+### Why not just use a window function for a per-group rate? [2026-10-23]
+**A:** A window never removes rows — it writes a value onto every row,
+so you still need DISTINCT or a filter to get back to one row per
+group. If the output grain is one row per user, GROUP BY gets there in
+one step. Use a window only when you need per-row values *and* the
+group value side by side (e.g. "flag every txn above its card's
+average"). Rule of thumb: output grain = input grain → window;
+output grain coarser than input → GROUP BY.
+**Status:** 🔶
+
+### How do you compute a rate that must include members with zero events? [2026-10-23]
+**A:** LEFT JOIN from the full-population table, group by the
+population table's key (not the joined table's — that one is NULL for
+non-matches), and make the numerator a CASE that evaluates to 0 for
+NULL rows: `AVG(CASE WHEN c.action = 'confirmed' THEN 1 ELSE 0 END)`.
+A zero-event member gets one NULL row, scores 0, and still appears.
+Payments version: conversion rate per card including cards that never
+transacted.
+**Status:** ✅
+
+### What breaks when you build a rate as x / (x + y)? [2026-10-23]
+**A:** It hard-codes the assumption that the category column has
+exactly two values. A new status later silently shrinks the
+denominator and inflates every rate, with no error. Safer:
+count the whole denominator directly (`COUNT(*)`, or
+`COUNT(c.user_id)` to exclude LEFT JOIN non-matches). Also guard the
+zero case: `x / NULLIF(denom, 0)` — MySQL returns NULL on /0 but
+Postgres raises an error, so the MySQL behaviour isn't portable.
+**Status:** ✅
+
 ### When do you use SUM() OVER vs SUM() with GROUP BY? [2026-10-22]
 **A:** Look at the output grain. One row per group -> GROUP BY (summarize the
 group). Keep every row and show the group total beside it -> SUM() OVER
