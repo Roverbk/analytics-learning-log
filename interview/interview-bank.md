@@ -2,6 +2,42 @@
 
 > **How to use:** read the answer, cover it, say it out loud in your own words. Mark ✅ (can say it) or 🔶 (shaky). Added date in brackets.
 
+## SQL: general
+
+### Why must you dedupe before gaps-and-islands? [2026-10-24]
+**A:** A repeated day gets two row numbers, so value − row_number shifts and a later
+non-consecutive day joins the island. Dedupe first: one row per card per day
+(DISTINCT card_id, txn_date, without txn_id).
+**Status:** ✅
+
+### COUNT(*) vs COUNT(col) after a LEFT JOIN [2026-10-24]
+**A:** COUNT(*) counts rows, so an unmatched member counts as 1. COUNT(right_table.col)
+counts non-NULL values, so an unmatched member counts as 0.
+**Status:** ✅
+
+### Report every category, including empty ones [2026-10-24]
+**A:** Hard-coded list of categories (UNION ALL of literals; BQ UNNEST; Postgres VALUES),
+LEFT JOIN the labelled data to it, COUNT(right col). Or UNION ALL of three aggregates
+with no GROUP BY (each always returns 1 row).
+**Status:** 🔶
+
+### Find rows in A with no match in B. Why not NOT IN? [2026-10-31]
+**A:** `A LEFT JOIN B ... WHERE B.key IS NULL`, or NOT EXISTS. NOT IN returns zero rows if
+the subquery contains a NULL, because x != NULL is never true.
+**Status:** 🔶
+
+### On a RIGHT JOIN, where do the NULLs appear? [2026-10-31]
+**A:** On the LEFT table's columns, for right-table rows with no match.
+**Status:** 🔶
+
+## Excel
+
+### What is a pivot table? [2026-10-31]
+**A:** A drag-and-drop GROUP BY: Rows = group key, Values = SUM/COUNT, Columns = second
+key as a grid (cross-tab), Filters = WHERE. A blank cell = no rows (not 0).
+One pivot cell = one SUMIFS with the same conditions.
+**Status:** 🔶
+
 ## SQL: window functions
 
 ### Why not just use a window function for a per-group rate? [2026-10-23]
